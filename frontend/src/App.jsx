@@ -191,15 +191,31 @@ const BottleGraphic = () => (
   </div>
 );
 
-// --- Navbar ---
 const Navbar = ({ lang, setLang, t }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [langOpen, setLangOpen] = useState(false); // ✅ नवीन state
+  const langRef = useRef(null); // ✅ outside click detect करण्यासाठी
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // ✅ Outside click वर dropdown बंद करणे
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (langRef.current && !langRef.current.contains(event.target)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const navItems = [
@@ -209,6 +225,13 @@ const Navbar = ({ lang, setLang, t }) => {
     { key: 'dosage', href: '#dosage' },
     { key: 'contact', href: '#contact' },
   ];
+
+  const langLabels = { mr: 'मराठी', hi: 'हिंदी', en: 'English' };
+
+  const handleLangSelect = (l) => {
+    setLang(l);
+    setLangOpen(false);
+  };
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'}`}>
@@ -233,37 +256,70 @@ const Navbar = ({ lang, setLang, t }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative group">
-              <button className="flex items-center gap-1 text-gray-700 font-medium px-3 py-2 rounded-full hover:bg-emerald-50 transition-all">
-                {lang === 'en' ? 'English' : lang === 'hi' ? 'हिंदी' : 'मराठी'}
-                <ChevronDown size={16} />
+            {/* ✅ Language Switcher — Click वर उघडतो */}
+            <div className="relative" ref={langRef}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1 text-gray-700 font-medium px-3 py-2 rounded-full hover:bg-emerald-50 transition-all active:bg-emerald-100"
+                aria-label="Select language"
+              >
+                <span className="text-sm sm:text-base">{langLabels[lang]}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`}
+                />
               </button>
-              <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden border border-emerald-100">
-                {['mr', 'hi', 'en'].map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => setLang(l)}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 transition-all ${lang === l ? 'text-emerald-600 font-bold' : 'text-gray-700'}`}
+
+              <AnimatePresence>
+                {langOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-2xl overflow-hidden border border-emerald-100 z-50"
                   >
-                    {l === 'en' ? 'English' : l === 'hi' ? 'हिंदी' : 'मराठी'}
-                  </button>
-                ))}
-              </div>
+                    {['mr', 'hi', 'en'].map((l) => (
+                      <button
+                        key={l}
+                        onClick={() => handleLangSelect(l)}
+                        className={`block w-full text-left px-4 py-3 text-sm transition-all ${
+                          lang === l
+                            ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 font-bold'
+                            : 'text-gray-700 hover:bg-emerald-50'
+                        }`}
+                      >
+                        {langLabels[l]}
+                        {lang === l && <span className="ml-2 text-emerald-500">✓</span>}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <a href="#contact" className="hidden sm:block bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white px-6 py-2.5 rounded-full font-medium hover:shadow-xl hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5">
               {t.nav.order}
             </a>
 
-            <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-gray-700">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden text-gray-700 p-2"
+              aria-label="Menu"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+                {isOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -274,11 +330,20 @@ const Navbar = ({ lang, setLang, t }) => {
           >
             <div className="px-4 pt-2 pb-6 space-y-2">
               {navItems.map((item) => (
-                <a key={item.key} href={item.href} onClick={() => setIsOpen(false)} className="block px-4 py-3 text-gray-700 hover:bg-emerald-50 rounded-lg font-medium">
+                <a
+                  key={item.key}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-emerald-50 rounded-lg font-medium"
+                >
                   {t.nav[item.key]}
                 </a>
               ))}
-              <a href="#contact" onClick={() => setIsOpen(false)} className="block text-center bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3 rounded-full font-medium mt-4">
+              <a
+                href="#contact"
+                onClick={() => setIsOpen(false)}
+                className="block text-center bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3 rounded-full font-medium mt-4"
+              >
                 {t.nav.order}
               </a>
             </div>
