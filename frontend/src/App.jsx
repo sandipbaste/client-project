@@ -237,14 +237,14 @@ const Navbar = ({ lang, setLang, t }) => {
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-500 p-2 rounded-xl shadow-md">
-              <Leaf className="text-white w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold text-emerald-800 hidden sm:block">
-              Jeevan Samruddhi
-            </span>
-          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+  <div className="bg-gradient-to-br from-emerald-500 to-teal-500 p-1.5 sm:p-2 rounded-xl shadow-md">
+    <Leaf className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+  </div>
+  <span className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-emerald-800 whitespace-nowrap">
+    Jeevan Samruddhi
+  </span>
+</div>
 
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
